@@ -43,6 +43,16 @@
 1. **[Subarray Sums Divisible by K](#19--subarray-sums-divisible-by-k)**
 1. **[Non-decreasing Subsequences](#20--non-decreasing-subsequences)**
 1. **[Restore IP Addresses](#21--restore-ip-addresses)**
+1. **[Palindrome Partitioning](#22--palindrome-partitioning)**
+1. **[Find the Town Judge](#23--find-the-town-judge)**
+1. **[Snakes and Ladders](#24--snakes-and-ladders)**
+1. **[Find Closest Node to Given Two Nodes](#25--find-closest-node-to-given-two-nodes)**
+1. **[Cheapest Flights Within K Stops](#26--cheapest-flights-within-k-stops)**
+1. **[Concatenated Words](#27--concatenated-words)**
+1. **[Data Stream as Disjoint Intervals](#28--data-stream-as-disjoint-intervals)**
+1. **[LFU Cache](#29--lfu-cache)**
+1. **[N-th Tribonacci Number](#30--n-th-tribonacci-number)**
+1. **[Best Team With No Conflicts](#31--best-team-with-no-conflicts)**
 
 <hr>
 
@@ -1233,6 +1243,649 @@ public:
 
         // valid ip addresses
         return ip_addresses;
+    }
+};
+```
+
+<hr>
+
+<br><br>
+
+## 22)  [Palindrome Partitioning](https://leetcode.com/problems/palindrome-partitioning/)
+
+### Difficulty
+
+**${\bf{\color\{orange}\{Medium}}}$**
+
+### Related Topic
+
+`String` `Backtracking` `Dynamic Programming`
+
+### Code
+
+
+```cpp
+class Solution {
+public:
+    
+    // to store the answers
+    vector < vector < string > > ans;
+    
+    // the pick up vector in the backtracking
+    vector < string > level;
+    
+    // check the string is palindrome or not
+    bool is_palindrome(string& s, int l, int r){
+        while(l <= r)
+            if(s[l++] != s[r--]) return false;
+        return true;
+    }
+    
+    void dfs(string &s, int start){
+        // if the string is end and all of it are palindromes
+        if(start >= s.size()) ans.push_back(level);
+        
+        // loop over the remaining indices and check if the substring is palindrome so pick it othwerwise leave it
+        for(int end = start; end < s.size(); end++){
+            if(is_palindrome(s, start, end)){
+                level.push_back(s.substr(start, end - start + 1));
+                dfs(s, end + 1);
+                level.pop_back();
+            }
+        }
+    }
+    
+    vector<vector<string>> partition(string& s) {
+        // do back tracking to get the palindrome vectors
+        dfs(s, 0);
+        
+        return ans;
+    }
+};
+```
+
+
+<hr>
+
+<br><br>
+
+## 23)  [Find the Town Judge](https://leetcode.com/problems/find-the-town-judge/)
+
+### Difficulty
+
+**${\bf{\color\{green}\{Easy}}}$**
+
+### Related Topic
+
+`Graph` `Hash Table` `Array`
+
+### Code
+
+
+```cpp
+class Solution {
+public:
+    int findJudge(int n, vector<vector<int>>& trust) {
+        
+        /*
+            to[i] -> number of people that the person i trust them
+            from[i] -> number of people that trust person i
+        */
+        vector < int > to(n + 1), from(n + 1);
+        for(auto vec : trust)
+            to[vec[0]]++, from[vec[1]]++;
+        
+        /*
+            the person is judge if two condition satisfied
+            - every body trust him -> from[i] = n - 1
+            - he trust no body -> to[i] = 0;
+        */ 
+
+        for(int i = 1; i <= n; i++)
+            if(to[i] == 0 && from[i] == n - 1)
+                return i;
+        
+        // if there is no judge exist
+        return -1;
+    }
+};
+```
+
+<hr>
+
+<br><br>
+
+## 24)  [Snakes and Ladders](https://leetcode.com/problems/snakes-and-ladders/)
+
+### Difficulty
+
+**${\bf{\color\{orange}\{Medium}}}$**
+
+### Related Topic
+
+`Graph` `Matrix` `Breadth-First Search`
+
+### Code
+
+
+```cpp
+class Solution {
+public:
+    int snakesAndLadders(vector<vector<int>>& board) {
+        // dimension of the board
+        int n = board.size();
+
+        // coord[i] will be the coordinate of the cell that value is i
+        vector < pair < int, int > > coord(n * n + 1);
+
+        // dist for each value
+        vector < int > dist(n * n + 1, 1e9);
+
+        // assign coordinate the direction is alternating by row
+        bool is_right = true;
+        for(int r = n, idx = 1; r >= 1; r--){
+            if(is_right)
+                for(int c = 1; c <= n; c++)
+                    coord[idx++] = {r, c};
+            else
+                for(int c = n; c >= 1; c--)
+                    coord[idx++] = {r, c};
+            is_right = !is_right;
+        }
+
+        // make bfs from 1 to n * n
+        queue < int > bfs;
+        bfs.push(1);
+        dist[1] = 0;
+
+        while(!bfs.empty()){
+            // current value
+            auto u = bfs.front();
+            auto [r, c] = coord[u];        
+            bfs.pop();
+
+            for(int v = u + 1; v <= min(u + 6, n * n); v++){
+                // get coordinate of the next value
+                auto [new_r, new_c] = coord[v];
+
+                // if the next value contains snake or ladder so we will go forward to it
+                int next = (board[new_r - 1][new_c - 1] == -1 ? v : board[new_r - 1][new_c - 1]);
+                
+                // bfs 0-1
+                if(dist[next] > dist[u] + 1)
+                    dist[next] = dist[u] + 1, bfs.push(next);
+            }
+        }
+
+        // if it's impossible to reach n * n
+        if(dist[n * n] == int(1e9))
+            dist[n * n] = -1;
+
+        // distance to move to n * n
+        return dist[n * n];
+    }
+};
+```
+
+<hr>
+
+<br><br>
+
+## 25)  [Find Closest Node to Given Two Nodes](https://leetcode.com/problems/find-closest-node-to-given-two-nodes/)
+
+### Difficulty
+
+**${\bf{\color\{orange}\{Medium}}}$**
+
+### Related Topic
+
+`Graph` `Breadth-First Search`
+
+### Code
+
+
+```cpp
+class Solution {
+public:
+
+    vector < int > BFS(int root, vector < int >& edges){
+        int n = edges.size();
+        
+        // save the distance form the root to each node
+        vector < int > dist(n, 1e9);
+
+        // bfs queue
+        queue < int > bfs;
+
+        // add the root to the queue and make it distance is 0
+        bfs.push(root);
+        dist[root] = 0;
+
+        while(!bfs.empty()){
+            int u = bfs.front();
+            bfs.pop();
+
+            // if the node has no outgoing edge
+            if(edges[u] == -1) continue;
+
+            // update the distance for the current node and add it to the queue
+            int v = edges[u];
+            if(dist[v] > dist[u] + 1)
+                dist[v] = dist[u] + 1, bfs.push(v);
+        }
+
+        // return the distances
+        return dist;
+    }
+
+    int closestMeetingNode(vector<int>& edges, int node1, int node2) {
+        int n = edges.size();
+
+        // get distances from node1 and node2 
+        vector < int > dist_a = BFS(node1, edges), dist_b = BFS(node2, edges);
+        
+        // get the min of max distance of all distances
+        int max_dist = 1e9, node = -1;
+        for(int u = 0; u < n; u++){
+            // get max_dist from node1 and node2 to the node u
+            int curr_dist = max(dist_a[u], dist_b[u]);
+
+            // update the minimum distance the answer for each node
+            if(curr_dist < max_dist)
+                max_dist = curr_dist, node = u;
+        }
+
+        // the index of the node that can be reach to the two nodes with minimum distance
+        return node;
+    }
+};
+```
+
+
+<hr>
+
+<br><br>
+
+## 26)  [Cheapest Flights Within K Stops](https://leetcode.com/problems/cheapest-flights-within-k-stops/)
+
+### Difficulty
+
+**${\bf{\color\{orange}\{Medium}}}$**
+
+### Related Topic
+
+`Dynamic Programming` `Depth-First Search` `Breadth-First Search` `Graph` `Heap (Priority Queue)` `Shortest Path`
+
+### Code
+
+
+```cpp
+class Solution {
+public:
+
+    int findCheapestPrice(int n, vector<vector<int>>& flights, int src, int dst, int k) {
+        vector < vector < pair < int, int > > > adj(n);
+
+        // make edge between u and v with weight w
+        for(auto& flight : flights)
+            adj[flight[0]].push_back({flight[1], flight[2]});
+
+        // the minimum dist for each node
+        vector < int > dist(n, 1e9);
+
+        // create a queue for the bfs technique and add source to it
+        queue < pair < int, int > > bfs;
+        bfs.push({src, 0});
+        dist[src] = 0;
+
+        // loop over k stops and for iteration loop over the current level
+        k++;
+        while(k--){
+
+            // iterate over the current level
+            int sz = bfs.size();
+            while(sz--){
+                auto [u, cost] = bfs.front();
+                bfs.pop();
+
+                // check if the next node you can reach it with min cost and in the range of [0 to k] stop
+                for(auto& [v, w] : adj[u]){
+                    if(dist[v] > cost + w)
+                        dist[v] = cost + w, bfs.push({v, cost + w});
+                }
+            }
+        }
+
+        // if the dst node can't be reached
+        if(dist[dst] == int(1e9))
+            dist[dst] = -1;
+
+        // return the minimum distance 
+        return dist[dst];
+    }
+};
+```
+
+<hr>
+
+<br><br>
+
+## 27)  [Concatenated Words](https://leetcode.com/problems/concatenated-words/)
+
+### Difficulty
+
+**${\bf{\color\{orange}\{Medium}}}$**
+
+### Related Topic
+
+`Dynamic Programming` `Depth-First Search` `Array` `String` `Trie`
+
+### Code
+
+
+```cpp
+class Solution {
+public:
+
+    vector < vector < int > > dp;
+    unordered_map < string, bool > exist;
+    
+    bool wordBreak(string& s, int l, int r) {
+        // if the string become empty
+        if(l > r) return true;
+
+        // if this substring is calulated before
+        int& ret = dp[l][r];
+        if(~ret) return ret;
+
+        // check the left substring and right substring
+        ret = false;
+        for(int i = l; i <= r; i++){
+
+            // check the substring from l to i
+            if(exist[s.substr(l, i - l + 1)] && s.substr(l, i - l + 1) != s)
+                ret |= wordBreak(s, i + 1, r);
+
+            // check the substring from i to r
+            if(exist[s.substr(i, r - i + 1)] && s.substr(i, r - i + 1) != s)
+                ret |= wordBreak(s, l, i - 1);
+        }
+        return ret;
+    }
+
+    vector<string> findAllConcatenatedWordsInADict(vector<string>& words) {
+        vector < string > conc_words;
+        for(auto& word : words)
+            exist[word] = true;
+        for(int i = 0; i < words.size(); i++){
+            int n = words[i].size();
+            // re inital the dp
+            dp = vector < vector < int > > (n, vector < int > (n, -1)); 
+            // check the current word
+            if(wordBreak(words[i], 0, n - 1))
+                conc_words.push_back(words[i]);
+        }
+        return conc_words;
+    }
+};
+```
+
+<hr>
+
+<br><br>
+
+## 28)  [Data Stream as Disjoint Intervals](https://leetcode.com/problems/data-stream-as-disjoint-intervals/)
+
+### Difficulty
+
+**${\bf{\color\{red}\{Hard}}}$**
+
+### Related Topic
+
+`Binary Search` `Design` `Ordered Set`
+
+### Code
+
+
+```cpp
+class SummaryRanges {
+public:
+
+    // we are going to use a vector to store the numbers in the data stream in sorted order
+    // we can use binary search to find the position of a number in the vector in O(logn) (upper_bound builtin function)
+    // we can insert a number in the vector in O(n) (insert builtin function)
+    // we can get the intervals in O(n) (we need to iterate over the vector and merge the intervals)
+    // so the total time complexity is O(nlogn)
+
+    vector<int> v;
+
+    SummaryRanges() {
+        // initialize the vector
+        v.assign(0, 0);
+    }
+    
+    void addNum(int value) {
+        // find the position of the number in the vector
+        auto it = upper_bound(v.begin(), v.end(), value);
+
+        // insert the number in the vector
+        v.insert(it, value);
+    }
+    
+    vector<vector<int>> getIntervals() {
+        // the answer (the intervals)
+        vector<vector<int>> ans;
+
+        // if the vector is empty we need to return the answer (empty vector of intervals)
+        if(v.empty())
+            return ans;
+        
+        // start and end of the current interval (initially the first number in the vector)
+        int st, ed;
+        st = ed = v.front();
+
+        // iterate over the vector and merge the intervals
+        for(int i = 0; i < v.size(); i++){
+            // if the current number is not adjacent to the current interval we need to add the current interval to the answer and start a new interval
+            if(v[i] - ed > 1){
+                ans.push_back({st, ed});
+                st = ed = v[i];
+            }else{
+                // if the current number is adjacent to the current interval we need to extend the current interval
+                ed = v[i];
+            }
+        }
+
+        // add the last interval to the answer
+        ans.push_back({st, ed});
+
+        // return the answer
+        return ans;
+    }
+};
+```
+
+
+<hr>
+
+<br><br>
+
+## 29)  [LFU Cache](https://leetcode.com/problems/lfu-cache/)
+
+### Difficulty
+
+**${\bf{\color\{red}\{Hard}}}$**
+
+### Related Topic
+
+`Hash Table` `Linked List` `Design` `Doubly-Linked List`
+
+### Code
+
+```cpp
+unordered_map<int, int> val, cnt, lu; // lu: last_used maintained by 'ins' (aka. instruction_pointer)
+
+class LFUCache {
+public:
+    int cap; // capacity
+    int ins; // instruction_pointer: increased every put() and get() calls
+    /*
+        user-defined data type 'Node' for comparing firstly 'cnt' (aka. use counter)
+        secondly if 'cnt' are tie sort by 'lu' (aka. last_used)
+    */
+    class Node {
+    public:
+        int key;
+        Node(int _key = 0) : key(_key) {}
+        bool operator<(const Node & p) const {
+            if (cnt[key] == cnt[p.key]) return lu[key] < lu[p.key];
+            return cnt[key] < cnt[p.key];
+        }
+    };
+    set<Node> st;
+    LFUCache(int capacity) {
+        ins = 0;
+        cap = capacity;
+        /*
+            using clear here because they was in global scope
+            the reason of putting them in global,
+             is to be able to access them inside class 'Node' while using 'operator<'
+        */
+        val.clear();
+        cnt.clear();
+        lu.clear();
+    }
+    
+    int get(int key) {
+        if (!cap) return -1;
+        if (val.find(key) == val.end()) return -1;
+        /*
+            every update:
+            1- erase 'key'
+            2- update 'key'
+            3- insert 'key' again
+        */
+        st.erase(key);
+        lu[key] = ins++;
+        cnt[key]++;
+        st.insert(key);
+        return val[key];
+    }
+    
+    void put(int key, int value) {
+        if (!cap) return;
+        if (val.size() == cap && val.find(key) == val.end()) {
+            /*
+                the st.begin()->key is the key which is LFU and LRU, to be removed
+            */
+            int ans = st.begin()->key;
+            val.erase(ans);
+            cnt.erase(ans);
+            lu.erase(ans);
+        }
+        /*
+            every update:
+            1- erase 'key'
+            2- update 'key'
+            3- insert 'key' again
+        */
+        st.erase(key);
+        cnt[key]++;
+        lu[key] = ins++;
+        st.insert(key);
+        val[key] = value;
+    }
+};
+```
+
+<hr>
+
+<br><br>
+
+## 30)  [N-th Tribonacci Number](https://leetcode.com/problems/n-th-tribonacci-number/)
+
+### Difficulty
+
+**${\bf{\color\{green}\{Easy}}}$**
+
+### Related Topic
+
+`Dynamic Programming` `Memoization` `Math` 
+
+### Code
+
+```cpp
+class Solution {
+public:
+    int tribonacci(int n) {
+        // to calculate the n-th tribonacci number
+        // we only need the last 3 numbers
+        // so we can use a vector of size 3
+        // and use the mod operator to get the last 3 numbers
+        // and the mod operator will also help us to get the n-th number
+        
+        // store the first 3 numbers in the vector 0, 1, 1;
+        vector<int> v = {0, 1, 1};
+        
+        // loop from 3 to n 
+        for(int i = 3; i <= n; i++)
+            // store the new number in i % 3 index in the vector
+            // the new number is the sum of the last 3 numbers
+            // which are the numbers in the (i - 1) % 3, (i - 2) % 3, (i - 3) % 3 indexes
+            // in the vector
+            v[i % 3] = v[(i - 1) % 3] + v[(i - 2) % 3] + v[(i - 3) % 3];
+
+        // return the n-th number which is in the n % 3 index in the vector
+        return v[n % 3];
+    }
+};
+```
+
+
+<hr>
+
+<br><br>
+
+## 31)  [Best Team With No Conflicts](https://leetcode.com/problems/best-team-with-no-conflicts/)
+
+### Difficulty
+
+**${\bf{\color\{orange}\{Medium}}}$**
+
+### Related Topic
+
+`Dynamic Programming` `Array` `Sorting` 
+
+### Code
+
+```cpp
+class Solution {
+public:
+
+    int bestTeamScore(vector<int>& scores, vector<int>& ages) {
+        // number of players and maxAge of the players to initial the dp vectors
+        int n = scores.size(), maxAge = *max_element(ages.begin(), ages.end());
+
+        // make vector of pairs the first is the score and the second is the age to sort it
+        vector < pair < int, int > > players(n);
+        for(int i = 0; i < n; i++)
+            players[i] = {scores[i], ages[i]};
+        sort(players.begin(), players.end());
+
+        // make dp state with rolling back
+        vector < vector < int > > dp(2, vector < int > (maxAge + 5));
+        
+        for(int i = n - 1; i >= 0; i--){
+            // if we will skip this players so the answer will the same for the previous player
+            dp[i % 2] = dp[(i + 1) % 2];
+
+            // we want for each age in the range between [1, age of the i-th player] to calculate the max of take it or leave it
+            for(int age = 1; age <= players[i].second; age++)
+                dp[i % 2][age] = max(dp[i % 2][age], players[i].first + dp[(i + 1) % 2][players[i].second]);
+        }
+
+        // return the max state for the first player
+        return *max_element(dp[0].begin(), dp[0].end());
     }
 };
 ```
